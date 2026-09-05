@@ -128,6 +128,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
+
+        # Read through supported_features before the console has been polled
+        if not self.available:
+            return None
+
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:
             return XBOX_STATE_MAP[status.playback_state]
@@ -182,7 +187,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
 
         return (
             to_https(image.uri)
-            if (app_details := self.data.app_details)
+            if self.available
+            and (app_details := self.data.app_details)
             and (image := _find_media_image(app_details.localized_properties[0].images))
             else None
         )
